@@ -139,7 +139,7 @@ struct inet_connection_sock {
 
 	ANDROID_KABI_RESERVE(1);
 
-#define ICSK_CA_PRIV_SIZE      (144)
+#define ICSK_CA_PRIV_SIZE      (216)
 	u64			  icsk_ca_priv[ICSK_CA_PRIV_SIZE / sizeof(u64)];
 };
 
