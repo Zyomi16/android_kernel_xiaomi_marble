@@ -2,7 +2,7 @@ name: kernel-build
 
 on:
   push:
-    branches: [merge/all-branches]
+    branches: [main]
     paths-ignore:
       - '**/*.md'
   workflow_dispatch:
@@ -59,15 +59,18 @@ jobs:
           # empty, which shows up much later as "linker 'ld.lld' not found".
           test -x "llvm-${LLVM_VER}/bin/ld.lld" \
             || { echo "::error::ld.lld missing after extract"; exit 1; }
+          echo "$HOME/toolchains/llvm-${LLVM_VER}/bin" >> $GITHUB_PATH
           "llvm-${LLVM_VER}/bin/clang" --version
 
       - name: Set up environment
         run: |
-          echo "CLANG_PATH=~/toolchains/llvm-${LLVM_VER}/bin" >> $GITHUB_ENV
-          echo "CCACHE_DIR=/home/runner/.ccache" >> $GITHUB_ENV
+          # $HOME, not ~ — GitHub Actions does not tilde-expand values written
+          # to GITHUB_ENV, so a literal ~ yields a path that does not exist.
+          echo "CLANG_PATH=$HOME/toolchains/llvm-${LLVM_VER}/bin" >> $GITHUB_ENV
+          echo "CCACHE_DIR=$HOME/.ccache" >> $GITHUB_ENV
           echo "KBUILD_BUILD_HOST=github-actions" >> $GITHUB_ENV
           echo "KBUILD_BUILD_USER=yomi16" >> $GITHUB_ENV
-          echo "PATH=/home/runner/.ccache:$PATH" >> $GITHUB_ENV
+          echo "PATH=$HOME/.ccache:$PATH" >> $GITHUB_ENV
           ccache --max-size=10G
           ccache --zero-stats || true
 
