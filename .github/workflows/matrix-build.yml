@@ -104,10 +104,16 @@ jobs:
 
       - name: Add swap (Full LTO needs RAM the runner does not have)
         run: |
-          sudo fallocate -l 16G /swapfile || sudo dd if=/dev/zero of=/swapfile bs=1G count=16
-          sudo chmod 600 /swapfile
-          sudo mkswap /swapfile
-          sudo swapon /swapfile
+          # Runners already ship a /swapfile in use; overwriting it fails with
+          # "Text file busy" and kills all 20 jobs before they compile.
+          if swapon --show | grep -q .; then
+            echo "swap already active, skipping"
+          else
+            sudo fallocate -l 16G /mnt/swapfile
+            sudo chmod 600 /mnt/swapfile
+            sudo mkswap /mnt/swapfile
+            sudo swapon /mnt/swapfile
+          fi
           free -g | head -2
           df -h / | tail -1
 
