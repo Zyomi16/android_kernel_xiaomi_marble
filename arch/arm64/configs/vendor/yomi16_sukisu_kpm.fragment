@@ -1,0 +1,9 @@
+# SukiSU Ultra + KPM — overlay for the -sukisu variant
+#
+# CONFIG_KPM enables the KernelPatch module loader (SukiSU Ultra's
+# kernel/Kconfig:28). It force-loads .ko modules from outside the kernel
+# tree, so it is off unless asked for.
+#
+# Usage: append to the sukisu variant's fragment list in kernel-build.yml,
+# or pass kpm=true on a manual run.
+CONFIG_KPM=y

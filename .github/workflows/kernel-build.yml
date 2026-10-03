@@ -6,6 +6,11 @@ on:
     paths-ignore:
       - '**/*.md'
   workflow_dispatch:
+    inputs:
+      kpm:
+        description: "Enable KPM (KernelPatch loader) in the sukisu variant"
+        type: boolean
+        default: false
 
 permissions:
   contents: read
@@ -25,13 +30,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        include:
-          - variant: stock
-            fragment: none
-          - variant: susfs
-            fragment: yomi16_susfs.fragment
-          - variant: sukisu
-            fragment: yomi16_sukisu.fragment
+        variant: [susfs, sukisu]
 
     steps:
       - name: Checkout
@@ -47,23 +46,20 @@ jobs:
             bc bison flex libssl-dev libelf-dev libncurses-dev \
             zstd lz4 device-tree-compiler cpio ccache python3 rsync
 
-      - name: Cache LLVM toolchain
-        id: llvm-cache
-        uses: actions/cache@v4
-        with:
-          path: ~/toolchains/llvm-${{ env.LLVM_VER }}
-          key: llvm-${{ env.LLVM_VER }}-${{ runner.os }}-${{ runner.arch }}
-
       - name: Fetch LLVM toolchain
-        if: steps.llvm-cache.outputs.cache-hit != 'true'
         run: |
           mkdir -p ~/toolchains
           cd ~/toolchains
-          curl -fsSL -o llvm.tar.xz \
+          curl -fsSL --retry 3 -o llvm.tar.xz \
             "https://mirrors.edge.kernel.org/pub/tools/llvm/files/llvm-${LLVM_VER}-x86_64.tar.xz"
           mkdir -p llvm-${LLVM_VER}
           tar -xJf llvm.tar.xz -C llvm-${LLVM_VER} --strip-components=1
           rm llvm.tar.xz
+          # A cached toolchain from a run that died before upload can come back
+          # empty, which shows up much later as "linker 'ld.lld' not found".
+          test -x "llvm-${LLVM_VER}/bin/ld.lld" \
+            || { echo "::error::ld.lld missing after extract"; exit 1; }
+          "llvm-${LLVM_VER}/bin/clang" --version
 
       - name: Set up environment
         run: |
@@ -89,11 +85,16 @@ jobs:
           clang --version
           make mrproper
           make LLVM=1 LLVM_IAS=1 O=out $DEFCONFIG
-          # bbr2 fragment applies to both variants; susfs only to the susfs one
           FRAGMENTS="arch/arm64/configs/vendor/yomi16_bbr2.fragment"
-          if [ "${{ matrix.fragment }}" != "none" ]; then
-            FRAGMENTS="$FRAGMENTS arch/arm64/configs/vendor/${{ matrix.fragment }}"
-          fi
+          case "${{ matrix.variant }}" in
+            susfs) FRAGMENTS="$FRAGMENTS arch/arm64/configs/vendor/yomi16_susfs.fragment" ;;
+            sukisu)
+              FRAGMENTS="$FRAGMENTS arch/arm64/configs/vendor/yomi16_sukisu.fragment"
+              if [ "${{ inputs.kpm }}" = "true" ]; then
+                FRAGMENTS="$FRAGMENTS arch/arm64/configs/vendor/yomi16_sukisu_kpm.fragment"
+              fi
+              ;;
+          esac
           echo "merging: $FRAGMENTS"
           # merge_config.sh takes the base config as its first positional arg.
           # Without it (-m -O out alone) it writes a fresh file containing only

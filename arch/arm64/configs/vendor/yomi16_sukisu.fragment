@@ -9,6 +9,10 @@
 # Trade-off vs ReSukiSU: SukiSU Ultra has CONFIG_KPM (KernelPatch module
 # loader) which ReSukiSU dropped, but no CONFIG_KSU_SUSFS_* at all, so this
 # variant gets no SUSFS and no multi-manager.
+#
+# KPM is off by default. Set the `kpm` input to true on a manual run, or add
+# "CONFIG_KPM=y" here to make it permanent. KPM force-loads external modules,
+# so it is opt-in.
 CONFIG_KSU_IMPL_SUKISU=y
 # CONFIG_KSU_IMPL_RESUKISU is not set
 CONFIG_KSU=y
