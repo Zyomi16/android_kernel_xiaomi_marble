@@ -261,6 +261,6 @@ config KSU_IMPL_SUKISU
 
 endchoice
 
-source "drivers/kernelsu/Kconfig"
-source "drivers/kernelsu-sukisu/Kconfig"
+source "drivers/kernelsu/kernel/Kconfig"
+source "drivers/kernelsu-sukisu/kernel/Kconfig"
 endmenu

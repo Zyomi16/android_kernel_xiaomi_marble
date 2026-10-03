@@ -1,0 +1,6 @@
+[submodule "drivers/kernelsu"]
+	path = drivers/kernelsu
+	url = https://github.com/ReSukiSU/ReSukiSU.git
+[submodule "drivers/kernelsu-sukisu"]
+	path = drivers/kernelsu-sukisu
+	url = https://github.com/sukisu-ultra/sukisu-ultra.git
