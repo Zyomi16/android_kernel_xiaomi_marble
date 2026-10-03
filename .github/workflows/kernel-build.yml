@@ -30,6 +30,8 @@ jobs:
             fragment: none
           - variant: susfs
             fragment: yomi16_susfs.fragment
+          - variant: sukisu
+            fragment: yomi16_sukisu.fragment
 
     steps:
       - name: Checkout

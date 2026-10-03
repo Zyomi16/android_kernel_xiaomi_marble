@@ -237,5 +237,30 @@ source "drivers/interconnect/Kconfig"
 source "drivers/counter/Kconfig"
 
 source "drivers/most/Kconfig"
+
+menuconfig KSU_IMPL
+	bool "Root implementation"
+	default KSU_IMPL_RESUKISU
+	help
+	  Which root manager to build. Both register the same CONFIG_KSU
+	  symbol, so exactly one may be compiled into the image.
+
+choice
+	prompt "Root manager"
+	default KSU_IMPL_RESUKISU
+	help
+	  ReSukiSU is a SukiSU Ultra fork that keeps the CONFIG_KSU_SUSFS_*
+	  options and adds KSU_MULTI_MANAGER_SUPPORT. SukiSU Ultra instead
+	  keeps CONFIG_KPM (KernelPatch module loading) but has no SUSFS.
+
+config KSU_IMPL_RESUKISU
+	bool "ReSukiSU (SUSFS + multi-manager)"
+
+config KSU_IMPL_SUKISU
+	bool "SukiSU Ultra (KPM, no SUSFS)"
+
+endchoice
+
 source "drivers/kernelsu/Kconfig"
+source "drivers/kernelsu-sukisu/Kconfig"
 endmenu

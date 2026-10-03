@@ -9,3 +9,9 @@ CONFIG_DEFAULT_BBR2=y
 # CONFIG_DEFAULT_WESTWOOD is not set
 # CONFIG_DEFAULT_FQ_CODEL is not set
 CONFIG_DEFAULT_FQ=y
+
+# Full LTO instead of the ThinLTO in marble_defconfig:113. The Kconfig symbol
+# is LTO_CLANG_FULL (arch/Kconfig:685); LTO_CLANG is just the hidden selector
+# both variants pull in. Docs warn link time can be long and RAM-hungry.
+CONFIG_LTO_CLANG_FULL=y
+# CONFIG_LTO_CLANG_THIN is not set

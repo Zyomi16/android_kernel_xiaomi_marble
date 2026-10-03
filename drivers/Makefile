@@ -190,4 +190,5 @@ obj-$(CONFIG_GNSS)		+= gnss/
 obj-$(CONFIG_INTERCONNECT)	+= interconnect/
 obj-$(CONFIG_COUNTER)		+= counter/
 obj-$(CONFIG_MOST)		+= most/
-obj-$(CONFIG_KSU)		+= kernelsu/
+obj-$(CONFIG_KSU_IMPL_RESUKISU) += kernelsu/
+obj-$(CONFIG_KSU_IMPL_SUKISU)   += kernelsu-sukisu/

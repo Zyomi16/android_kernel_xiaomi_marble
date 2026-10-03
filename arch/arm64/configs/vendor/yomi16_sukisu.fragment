@@ -1,0 +1,15 @@
+# SukiSU Ultra (no SUSFS) — Yomi16
+# For the -sukisu build variant.
+#
+# Source: github.com/sukisu-ultra/sukisu-ultra @ 7fbbb1f12e24 (2026-09-29)
+#
+# Kept alongside drivers/kernelsu-sukisu/ so both managers can be built. Only
+# one is wired into drivers/Kconfig at a time — see kernel-build.yml.
+#
+# Trade-off vs ReSukiSU: SukiSU Ultra has CONFIG_KPM (KernelPatch module
+# loader) which ReSukiSU dropped, but no CONFIG_KSU_SUSFS_* at all, so this
+# variant gets no SUSFS and no multi-manager.
+CONFIG_KSU_IMPL_SUKISU=y
+# CONFIG_KSU_IMPL_RESUKISU is not set
+CONFIG_KSU=y
+# CONFIG_KPM is not set

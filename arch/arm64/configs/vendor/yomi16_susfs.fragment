@@ -8,6 +8,8 @@
 # KSU_SUSFS_HIDE_SUSFS_MOUNTS is absent from ReSukiSU; KSU_SUSFS_SUS_MOUNT is
 # the equivalent knob. Droidspaces (README.md:276) needs sus-mount hiding off
 # or containers fail to boot.
+CONFIG_KSU_IMPL_RESUKISU=y
+# CONFIG_KSU_IMPL_SUKISU is not set
 CONFIG_KSU=y
 CONFIG_KSU_MULTI_MANAGER_SUPPORT=y
 
