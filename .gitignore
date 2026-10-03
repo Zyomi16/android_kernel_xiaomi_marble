@@ -167,3 +167,11 @@ sphinx_*/
 # Custom
 /build.sh
 Documentation/devicetree/bindings
+
+# Yomi16 build output
+/out/
+/Image
+/Image_*
+/vmlinux*
+/System.map
+/Module.symvers
