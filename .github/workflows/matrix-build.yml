@@ -1,0 +1,181 @@
+name: matrix-build
+
+on:
+  push:
+    branches: [ci/melt-matrix]
+    paths-ignore:
+      - '**/*.md'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: matrix-build-${{ github.ref }}
+  cancel-in-progress: false
+
+env:
+  LLVM_VER: 23.1.1
+  DEFCONFIG: marble_defconfig
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 180
+    strategy:
+      fail-fast: false
+      max-parallel: 4
+      matrix:
+        include:
+          - name: plain-thin-O3
+            fragments: ""
+            kcflags: "-D__ANDROID_COMMON_KERNEL__ -O3"
+          - name: plain-full-O3
+            fragments: "yomi16_lto_full.fragment"
+            kcflags: "-D__ANDROID_COMMON_KERNEL__ -O3"
+          - name: plain-none-O3
+            fragments: "yomi16_lto_none.fragment"
+            kcflags: "-D__ANDROID_COMMON_KERNEL__ -O3"
+          - name: plain-thin-O2
+            fragments: ""
+            kcflags: "-D__ANDROID_COMMON_KERNEL__ -O2"
+          - name: bbr2-thin-O3
+            fragments: "yomi16_bbr2_thin.fragment"
+            kcflags: "-D__ANDROID_COMMON_KERNEL__ -O3"
+          - name: bbr2-full-O3
+            fragments: "yomi16_bbr2.fragment"
+            kcflags: "-D__ANDROID_COMMON_KERNEL__ -O3"
+          - name: bbr2-none-O3
+            fragments: "yomi16_bbr2_thin.fragment yomi16_lto_none.fragment"
+            kcflags: "-D__ANDROID_COMMON_KERNEL__ -O3"
+          - name: bbr2-thin-O2
+            fragments: "yomi16_bbr2_thin.fragment"
+            kcflags: "-D__ANDROID_COMMON_KERNEL__ -O2"
+          - name: bbr2-full-susfs
+            fragments: "yomi16_bbr2.fragment yomi16_susfs.fragment"
+            kcflags: "-D__ANDROID_COMMON_KERNEL__ -O3"
+          - name: bbr2-thin-susfs
+            fragments: "yomi16_bbr2_thin.fragment yomi16_susfs.fragment"
+            kcflags: "-D__ANDROID_COMMON_KERNEL__ -O3"
+          - name: bbr2-full-resukisu
+            fragments: "yomi16_bbr2.fragment yomi16_resukisu.fragment"
+            kcflags: "-D__ANDROID_COMMON_KERNEL__ -O3"
+          - name: bbr2-thin-sukisu
+            fragments: "yomi16_bbr2_thin.fragment yomi16_sukisu.fragment"
+            kcflags: "-D__ANDROID_COMMON_KERNEL__ -O3"
+          - name: bbr2-full-sukisu
+            fragments: "yomi16_bbr2.fragment yomi16_sukisu.fragment"
+            kcflags: "-D__ANDROID_COMMON_KERNEL__ -O3"
+          - name: bbr2-thin-sukisu-kpm
+            fragments: "yomi16_bbr2_thin.fragment yomi16_sukisu.fragment yomi16_sukisu_kpm.fragment"
+            kcflags: "-D__ANDROID_COMMON_KERNEL__ -O3"
+          - name: bbr2-full-sukisu-kpm
+            fragments: "yomi16_bbr2.fragment yomi16_sukisu.fragment yomi16_sukisu_kpm.fragment"
+            kcflags: "-D__ANDROID_COMMON_KERNEL__ -O3"
+          - name: plain-full-susfs
+            fragments: "yomi16_lto_full.fragment yomi16_susfs.fragment"
+            kcflags: "-D__ANDROID_COMMON_KERNEL__ -O3"
+          - name: plain-thin-sukisu
+            fragments: "yomi16_sukisu.fragment"
+            kcflags: "-D__ANDROID_COMMON_KERNEL__ -O3"
+          - name: bbr2-full-O2
+            fragments: "yomi16_bbr2.fragment"
+            kcflags: "-D__ANDROID_COMMON_KERNEL__ -O2"
+          - name: plain-thin-susfs
+            fragments: "yomi16_susfs.fragment"
+            kcflags: "-D__ANDROID_COMMON_KERNEL__ -O3"
+          - name: bbr2-none-sukisu-kpm
+            fragments: "yomi16_bbr2_thin.fragment yomi16_lto_none.fragment yomi16_sukisu.fragment yomi16_sukisu_kpm.fragment"
+            kcflags: "-D__ANDROID_COMMON_KERNEL__ -O3"
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          submodules: recursive
+
+      - name: Install build dependencies
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y --no-install-recommends \
+            bc bison flex libssl-dev libelf-dev libncurses-dev \
+            zstd lz4 device-tree-compiler cpio ccache python3 rsync
+
+      - name: Add swap (Full LTO needs RAM the runner does not have)
+        run: |
+          sudo fallocate -l 16G /swapfile || sudo dd if=/dev/zero of=/swapfile bs=1G count=16
+          sudo chmod 600 /swapfile
+          sudo mkswap /swapfile
+          sudo swapon /swapfile
+          free -g | head -2
+          df -h / | tail -1
+
+      - name: Fetch LLVM toolchain
+        run: |
+          mkdir -p ~/toolchains
+          cd ~/toolchains
+          curl -fsSL --retry 3 -o llvm.tar.xz \
+            "https://mirrors.edge.kernel.org/pub/tools/llvm/files/llvm-${LLVM_VER}-x86_64.tar.xz"
+          mkdir -p llvm-${LLVM_VER}
+          tar -xJf llvm.tar.xz -C llvm-${LLVM_VER} --strip-components=1
+          rm llvm.tar.xz
+          test -x "llvm-${LLVM_VER}/bin/ld.lld" \
+            || { echo "::error::ld.lld missing after extract"; exit 1; }
+          echo "$HOME/toolchains/llvm-${LLVM_VER}/bin" >> $GITHUB_PATH
+          "llvm-${LLVM_VER}/bin/clang" --version
+
+      - name: Set up environment
+        run: |
+          echo "KBUILD_BUILD_HOST=github-actions" >> $GITHUB_ENV
+          echo "KBUILD_BUILD_USER=yomi16" >> $GITHUB_ENV
+          echo "SOURCE_DATE_EPOCH=1790808000" >> $GITHUB_ENV
+          ccache --max-size=10G
+          ccache --zero-stats || true
+
+      - name: Cache ccache
+        uses: actions/cache@v4
+        with:
+          path: ~/.ccache
+          key: ccache-matrix-${{ matrix.name }}-${{ runner.os }}-${{ github.sha }}
+          restore-keys: |
+            ccache-matrix-${{ matrix.name }}-${{ runner.os }}-
+
+      - name: Configure
+        run: |
+          make ARCH=arm64 mrproper
+          make ARCH=arm64 LLVM=1 LLVM_IAS=1 O=out $DEFCONFIG
+          if [ -n "${{ matrix.fragments }}" ]; then
+            FRAGS=""
+            for f in ${{ matrix.fragments }}; do
+              FRAGS="$FRAGS arch/arm64/configs/vendor/$f"
+            done
+            echo "merging:$FRAGS"
+            scripts/kconfig/merge_config.sh -m -O out \
+              arch/arm64/configs/$DEFCONFIG $FRAGS
+          fi
+          make ARCH=arm64 LLVM=1 LLVM_IAS=1 O=out olddefconfig
+          grep -E "^CONFIG_(TCP_CONG_BBR2|DEFAULT_BBR2|KSU|KSU_SUSFS|KPM|LTO_CLANG_FULL|LTO_CLANG_THIN|LTO_NONE)=" out/.config || true
+
+      - name: Build
+        run: |
+          make ARCH=arm64 LLVM=1 LLVM_IAS=1 O=out -j$(nproc) \
+            KCFLAGS="${{ matrix.kcflags }}" \
+            KBUILD_LDFLAGS="-O3 --lto-O3" all
+
+      - name: Report image
+        if: always()
+        run: |
+          ls -la out/arch/arm64/boot/Image* 2>/dev/null || echo "NO IMAGE"
+          sha256sum out/arch/arm64/boot/Image 2>/dev/null || true
+
+      - name: Upload artifacts
+        if: success()
+        uses: actions/upload-artifact@v4
+        with:
+          name: Image-${{ matrix.name }}
+          path: |
+            out/arch/arm64/boot/Image
+            out/.config
+          if-no-files-found: error
+          retention-days: 14

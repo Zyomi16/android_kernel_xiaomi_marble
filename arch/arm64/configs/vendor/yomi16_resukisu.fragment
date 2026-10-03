@@ -1,0 +1,10 @@
+# ReSukiSU without SUSFS — Yomi16
+# For variants that want root + multi-manager but no filesystem hiding
+# (e.g. DroidSpaces users who hit the SUS_MOUNT namespace conflict).
+#
+# Source: github.com/ReSukiSU/ReSukiSU @ b0fa24df9167 (2026-10-03)
+CONFIG_KSU_IMPL_RESUKISU=y
+# CONFIG_KSU_IMPL_SUKISU is not set
+CONFIG_KSU=y
+CONFIG_KSU_MULTI_MANAGER_SUPPORT=y
+# CONFIG_KSU_SUSFS is not set

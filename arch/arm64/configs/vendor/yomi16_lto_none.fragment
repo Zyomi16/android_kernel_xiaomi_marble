@@ -1,0 +1,5 @@
+# No LTO — Yomi16
+# marble_defconfig:113 sets CONFIG_LTO_CLANG_THIN=y. This fragment turns LTO
+# off entirely for the fastest-linking variants. Verified: neither
+# LTO_CLANG_FULL nor LTO_CLANG_THIN remains set after olddefconfig.
+# CONFIG_LTO_CLANG_THIN is not set

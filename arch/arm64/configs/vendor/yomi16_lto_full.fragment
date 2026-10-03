@@ -1,0 +1,6 @@
+# Full LTO only — Yomi16
+# Split out of yomi16_bbr2.fragment so plain (non-BBR2) variants can use
+# Full LTO too. Symbol is LTO_CLANG_FULL (arch/Kconfig:685); LTO_CLANG is
+# just the hidden selector both variants pull in.
+CONFIG_LTO_CLANG_FULL=y
+# CONFIG_LTO_CLANG_THIN is not set
