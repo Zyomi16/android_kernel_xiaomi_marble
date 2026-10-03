@@ -38,6 +38,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
+          submodules: recursive
 
       - name: Install build dependencies
         run: |
@@ -94,7 +95,11 @@ jobs:
             FRAGMENTS="$FRAGMENTS arch/arm64/configs/vendor/${{ matrix.fragment }}"
           fi
           echo "merging: $FRAGMENTS"
-          scripts/kconfig/merge_config.sh -m -O out $FRAGMENTS
+          # merge_config.sh takes the base config as its first positional arg.
+          # Without it (-m -O out alone) it writes a fresh file containing only
+          # the fragment lines and drops the rest of the defconfig.
+          scripts/kconfig/merge_config.sh -m -O out \
+            arch/arm64/configs/$DEFCONFIG $FRAGMENTS
           make LLVM=1 LLVM_IAS=1 O=out olddefconfig
 
       - name: Build
