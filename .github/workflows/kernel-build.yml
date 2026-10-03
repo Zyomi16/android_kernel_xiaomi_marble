@@ -86,8 +86,8 @@ jobs:
         run: |
           export PATH="$CLANG_PATH:$PATH"
           clang --version
-          make mrproper
-          make LLVM=1 LLVM_IAS=1 O=out $DEFCONFIG
+          make ARCH=arm64 mrproper
+          make ARCH=arm64 LLVM=1 LLVM_IAS=1 O=out $DEFCONFIG
           FRAGMENTS="arch/arm64/configs/vendor/yomi16_bbr2.fragment"
           case "${{ matrix.variant }}" in
             susfs) FRAGMENTS="$FRAGMENTS arch/arm64/configs/vendor/yomi16_susfs.fragment" ;;
@@ -104,12 +104,12 @@ jobs:
           # the fragment lines and drops the rest of the defconfig.
           scripts/kconfig/merge_config.sh -m -O out \
             arch/arm64/configs/$DEFCONFIG $FRAGMENTS
-          make LLVM=1 LLVM_IAS=1 O=out olddefconfig
+          make ARCH=arm64 LLVM=1 LLVM_IAS=1 O=out olddefconfig
 
       - name: Build
         run: |
           export PATH="$CLANG_PATH:$PATH"
-          make LLVM=1 LLVM_IAS=1 O=out -j$(nproc) \
+          make ARCH=arm64 LLVM=1 LLVM_IAS=1 O=out -j$(nproc) \
             KCFLAGS="-D__ANDROID_COMMON_KERNEL__ -O3" \
             KBUILD_LDFLAGS="-O3 --lto-O3" all
 
