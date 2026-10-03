@@ -1,0 +1,11 @@
+# BBR2 TCP congestion control — Yomi16
+# Kernel: 5.10.270 (ACK GKI 2.0, marble / SM7475)
+#
+# BBR2 needs the FQ qdisc for correct pacing. net/sched/Kconfig:439-447
+# resolves DEFAULT_NET_SCH in order, and "fq" (line 442) is tested before
+# "fq_codel" (line 443), so DEFAULT_FQ wins as long as DEFAULT_FQ_CODEL is off.
+CONFIG_TCP_CONG_BBR2=y
+CONFIG_DEFAULT_BBR2=y
+# CONFIG_DEFAULT_WESTWOOD is not set
+# CONFIG_DEFAULT_FQ_CODEL is not set
+CONFIG_DEFAULT_FQ=y

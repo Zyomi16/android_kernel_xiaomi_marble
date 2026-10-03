@@ -1,0 +1,30 @@
+# ReSukiSU + SUSFS + DroidSpaces — Yomi16
+# Only for the -susfs build variant. The stock variant omits this file.
+#
+# Source: github.com/ReSukiSU/ReSukiSU @ b0fa24df9167 (2026-10-03)
+# Kernel side: gitlab.com/simonpunk/susfs4ksu @ 9892175b4ace (2026-09-26)
+#   branch gki-android12-5.10, patch 50_add_susfs_in_gki-android12-5.10.patch
+#
+# KSU_SUSFS_HIDE_SUSFS_MOUNTS is absent from ReSukiSU; KSU_SUSFS_SUS_MOUNT is
+# the equivalent knob. Droidspaces (README.md:276) needs sus-mount hiding off
+# or containers fail to boot.
+CONFIG_KSU=y
+CONFIG_KSU_MULTI_MANAGER_SUPPORT=y
+
+CONFIG_KSU_SUSFS=y
+CONFIG_KSU_SUSFS_SUS_PATH=y
+CONFIG_KSU_SUSFS_SUS_MOUNT=y
+CONFIG_KSU_SUSFS_SUS_KSTAT=y
+CONFIG_KSU_SUSFS_SUS_MAP=y
+CONFIG_KSU_SUSFS_OPEN_REDIRECT=y
+CONFIG_KSU_SUSFS_HIDE_KSU_SUSFS_SYMBOLS=y
+CONFIG_KSU_SUSFS_SPOOF_CMDLINE_OR_BOOTCONFIG=y
+# Left off on purpose: marble_defconfig:2-5 UNAME_OVERRIDE spoofs the kernel
+# version for com.google.android.gms / com.tencent.tmgp. Enabling SUSFS's
+# uname spoof here would override the author's.
+# CONFIG_KSU_SUSFS_SPOOF_UNAME is not set
+# CONFIG_KSU_SUSFS_ENABLE_LOG is not set
+
+# Droidspaces requires this for UFW. Not present in GKI 5.10 — Google dropped
+# xt_REJECT in favour of nftables, so there is no Kconfig symbol to enable.
+# [option không tồn tại]
