@@ -7072,7 +7072,7 @@ static int find_energy_efficient_cpu(struct task_struct *p, int prev_cpu, int sy
 		base_energy += base_energy_pd;
 
 		for_each_cpu_and(cpu, perf_domain_span(pd), sched_domain_span(sd)) {
-			if (!cpumask_test_cpu(cpu, p->cpus_ptr))
+			if (!cpumask_test_cpu(cpu, p->cpus_ptr) || is_task_rotation_reserved(cpu))
 				continue;
 
 			util = cpu_util_next(cpu, p, cpu);
@@ -10226,6 +10226,12 @@ more_balance:
 
 			raw_spin_lock_irqsave(&busiest->lock, flags);
 
+			if (is_task_rotation_reserved(this_cpu) ||
+				is_task_rotation_reserved(cpu_of(busiest))) {
+				raw_spin_unlock_irqrestore(&busiest->lock, flags);
+				*continue_balancing = 0;
+				goto out;
+			}
 			/*
 			 * Don't kick the active_load_balance_cpu_stop,
 			 * if the curr task on busiest CPU can't be
@@ -11958,3 +11964,7 @@ int sched_trace_rq_nr_running(struct rq *rq)
         return rq ? rq->nr_running : -1;
 }
 EXPORT_SYMBOL_GPL(sched_trace_rq_nr_running);
+
+#ifdef CONFIG_SPRD_ROTATION_TASK
+#include "sprd_rotation.c"
+#endif

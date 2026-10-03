@@ -2633,6 +2633,7 @@ static inline bool uclamp_latency_sensitive(struct task_struct *p)
 # define arch_scale_freq_invariant()	false
 #endif
 
+extern struct cpumask min_cap_cpu_mask;
 #ifdef CONFIG_SMP
 static inline unsigned long capacity_orig_of(int cpu)
 {
@@ -2799,3 +2800,30 @@ static inline bool task_may_not_preempt(struct task_struct *task, int cpu)
 	return false;
 }
 #endif /* CONFIG_RT_SOFTINT_OPTIMIZATION */
+
+#ifdef CONFIG_SPRD_ROTATION_TASK
+DECLARE_PER_CPU_SHARED_ALIGNED(bool, cpu_reserved);
+static inline bool is_task_rotation_reserved(int cpu)
+{
+	return per_cpu(cpu_reserved, cpu);
+}
+static inline void mark_task_rotation_reserved(int cpu)
+{
+	per_cpu(cpu_reserved, cpu) = true;
+}
+static inline void clear_task_rotation_reserved(int cpu)
+{
+	per_cpu(cpu_reserved, cpu) = false;
+}
+void check_for_task_rotation(struct rq *src_rq);
+u64 sched_ktime_clock(void);
+#else
+static inline bool is_task_rotation_reserved(int cpu)
+{
+	return false;
+}
+static inline u64 sched_ktime_clock(void)
+{
+	return sched_clock();
+}
+#endif
